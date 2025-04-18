@@ -1,0 +1,267 @@
+---
+title: "Data Wrangling Made Simple"
+author: "Tessa Volpe"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: readable
+    toc: true
+    toc_float: true
+  pdf_document:
+    toc: true
+---
+
+# Introduction
+
+Welcome to this beginner-friendly tutorial for data wrangling in **R**! Data wrangling, also known as data transformation, involves the process of cleaning, organizing, and reshaping raw data into a more useful format for analysis. This is a necessary step in any data analysis workflow as it ensures data is accurate and properly formatted for your analytical or visualization goals. 
+
+In this tutorial, we will work with the `diamonds` dataset, which is built into **R**. The dataset contains characteristics of over 50,000 diamonds including the carat, cut, and price of each. The `diamonds` dataset is  excellent for learning data wrangling techniques as it contains a mix of categorical and numerical variables. This offers plenty of opportunities to practice key techniques like filtering, grouping, and summarizing. Furthermore, it is free from major issues like missing values, allowing us to focus on mastering data wrangling without the distraction of complex data cleaning. This will provide a solid foundation for new learners. 
+
+By the end of this tutorial, you will have gained practical experience in transforming data to prepare it for deeper analysis and visualization tasks. Now, let's wrangle some data!
+
+![^[https://images.app.goo.gl/WuaVpaFtG4mgVpr49]](data_cowboy.png)
+
+# Setup
+
+Before we begin, we need to load the dataset, which is available in the `ggplot2` package, and the necessary tools for data transformation, which are available in the `dplyr` package. The tidyverse is a collection of **R** packages designed to work together, making data wrangling and analysis more intuitive and efficient. By loading in the tidyverse, we gain access to both the `diamonds` dataset and the `dplyr` package:
+
+```{r setup, warning = FALSE, message = FALSE}
+library(tidyverse)
+```
+
+## Diamonds Dataset
+
+We can use `glimpse()` to view an excerpt of our `diamonds` dataset and get a feel for what we will be working with:
+
+```{r glimpse}
+glimpse(diamonds)
+```
+
+We can learn even more about the built-in dataset by accessing the **R** documentation.
+
+```{r help, eval = FALSE}
+help(diamonds)
+```
+
+The data frame contains 53,940 rows and 10 variables. The variables are as follows:
+
+- **price**: price in US dollars, ($326–$18,823)
+- **carat**: weight of the diamond, (0.2–5.01)
+- **cut**: quality of the cut, (Fair, Good, Very Good, Premium, Ideal)
+- **color**: diamond color, from D (best) to J (worst)
+- **clarity**: a measurement of how clear the diamond is, (I1 (worst), SI2, SI1, VS2, VS1, VVS2, VVS1, IF (best))
+- **x**: length in mm, (0–10.74)
+- **y**: width in mm, (0–58.9)
+- **z**: depth in mm, (0–31.8)
+- **depth**: total depth percentage = 2 * z / (x + y), (43–79)
+- **table**: width of top of diamond relative to widest point
+
+We are now ready to begin learning how to use transformation tools on a dataset. Let's go!
+
+# Tutorial
+
+The main purpose of the previously mentioned `dplyr` package is to make data manipulation easier and more intuitive. It provides a collection of functions (called verbs) to help transform and organize data. There is a large amount of verbs contained in `dplyr`, so we will be keeping it simple by only focusing on a few that are most commonly used. As expected, learning the basics will make next steps easier to grasp. Once you explore the possibilities, you will definitely come to appreciate `dplyr`!
+
+## Filtering Rows
+
+The verb `filter()` is used to subset data based on a criteria we define. This function grabs a particular portion of a dataset. It creates a new data frame containing only the rows that meet the condition(s) we specify.
+
+- Syntax: `filter(data, condition1, condition2, ...)`  
+    - `data`: the dataset you want to filter    
+    - `condition1, ...`: the condition(s) rows must meet to be included 
+
+### Basic Example
+
+We currently have a dataset with more than 53,000 diamonds. Let's narrow it down by specifying only "Ideal" cut diamonds:
+
+```{r filter}
+ideal_diamonds <- filter(diamonds, 
+                         cut == "Ideal")
+
+# View portion of filtered data frame
+head(ideal_diamonds)
+```
+
+Take a look at the second column. Notice how it only includes Ideal cut diamonds.
+
+### Multiple Conditions Example
+
+We can also filter for multiple conditions. This will keep diamonds that meet **all** of the defined criteria:
+
+```{r filter multi}
+filtered_diamonds <- filter(diamonds, 
+                        cut == "Ideal",
+                        color == c("D", "E", "F"))
+
+# View portion of filtered data frame
+head(filtered_diamonds)
+```
+
+Take a look at the second and third columns. See how they only include Ideal cut diamonds that are color D, E, or F. Both conditions have to be met for the row to be kept.
+
+### Visualization
+
+Let's say we want to visualize the price distribution of the three highest quality colors for Ideal cut diamonds. After filtering the dataset to include only Ideal cut diamonds of colors D, E, and F, we can do just that:
+
+```{r filter vis}
+ggplot(filtered_diamonds, aes(x = color, y = price, fill = color)) +
+  geom_boxplot() +
+  labs(
+    title = "Price Distribution for Ideal Cut Diamonds",
+    subtitle = "Colors D, E, and F",
+    x = "Color",
+    y = "Price ($)",
+    fill = "Color"
+  ) +
+  theme_minimal()
+```
+
+This box plot shows how prices vary between different colors of Ideal cut diamonds. All three colors show a wide range of prices. Color F shows a broader interquartile range, indicating more variability in the mid-50% of prices. Additionally, all three colors have a significant number of high-value outliers. This suggests that other attributes, such as carat size or clarity, may play a stronger role than color in determining price.
+
+
+### Importance
+
+So, why is `filter()` useful? As demonstrated, it allows you to quickly narrow down your dataset to focus on specific conditions, making your data analysis much more efficient. By filtering data based on conditions you define, you can isolate relevant subsets, which helps you concentrate on what matters most for your analysis. When you use multiple conditions, you can create more precise subsets. Visualizations with these subsets can help you gain deeper insights and better understand patterns in your data.
+
+## Sorting Data
+
+The `arrange()` function is used to sort the rows of a dataset based on one or more defined variables. We often describe this verb as sorting. Sorting can be done in ascending or descending order.
+
+- Syntax: `arrange(data, variable1, variable2, ...)`  
+    - `data`: the dataset you want to sort  
+    - `variable1, ...`: the columns by which you want to sort the data
+
+### Basic Example
+
+Let's try sorting our `diamonds` dataset by carat size. Ascending order is the default:
+
+```{r arrange}
+# Ascending order
+sorted_carat <- arrange(diamonds, 
+                        carat)
+
+# View portion of arranged data frame
+head(sorted_carat)
+```
+
+Take a look at the first column. You may not immediately notice that it is sorted in ascending order, since the first few rows show all the same size. `head()` only prints the first few rows, and early duplicates can make sorting hard to spot. However, I can verify for you that 0.2 is the smallest size in this dataset and the following 53,934 diamonds do increase in carat size.
+
+We can also sort by descending carat size. To sort in descending order, you must specify using the desc() function within:
+
+```{r arrange2}
+# Descending order
+sorted_carat_desc <- arrange(diamonds, 
+                             desc(carat))
+
+# View portion of arranged data frame
+head(sorted_carat_desc)
+```
+
+Take a look at the first column. Notice how the top row has the largest carat size, and values decrease as you move down.
+
+### Multiple Variables Example
+
+We can also arrange rows based on multiple variables. This will sort the diamonds by the first specified variable, then the second. 
+
+Let’s try sorting the diamonds first by carat size (in descending order), then by price (in ascending order):
+
+```{r arrange multi}
+sorted_carat_price <- arrange(diamonds, 
+                              desc(carat), 
+                              price)
+
+# View portion of arranged data frame
+head(sorted_carat_price)
+```
+
+Take a look at the first and seventh columns. Notice how the new data frame is sorted from largest to smallest carat size and within equivalent carat sizes, the diamonds are further sorted from cheapest to most expensive.
+
+### Importance
+
+So, why is `arrange()` useful? It helps you to organize your data in a way that is easier to analyze and interpret. It also improves readability when simply viewing the dataset. Sorting data is a crucial step in data analysis because it can reveal trends, help identify outliers, and make your analysis more understandable.
+
+## Grouping and Summarizing Data
+
+The `group_by()` function is used to categorize rows based a variable we define. It does not immediately change the data, but instead sets it up for later operations you may want to perform on each group, such as averaging or summing. Once grouped, following `dplyr` verbs will work *within each group*, not the entire dataset.
+
+- Syntax: `group_by(data, variable1, variable2, ...)`
+    - `data`: the dataset you want to separate into groups
+    - `variable1, ...` : the column(s) you want to group by
+
+### Basic Example
+
+Let's start by grouping our diamonds based on their cut:
+
+```{r groupby}
+group_cut <- group_by(diamonds, 
+                      cut)
+
+# View portion of the grouped data frame
+head(group_cut, 10)
+```
+
+Notice how nothing in the dataset changes, but there is new information at the top: `Groups: cut [5]`. This tells that behind the scenes the diamonds are now separated into 5 different groups based on their cut (Fair, Good, Very Good, Premium, Ideal).
+
+### Multiple Variables Example
+
+We can also group by multiple variables. For example, let's group by *both* cut and clarity:
+
+```{r}
+group_cut_clarity <- group_by(diamonds, 
+                              cut, 
+                              clarity)
+
+# View grouped data
+group_cut_clarity
+```
+
+Take a look at the new information at the top: `Groups: cut, clarity [40]`. Our data is now separated into 40 groups: 8 different clarity levels for each of the 5 different cuts.
+
+### With `summarize()` Example
+Let's take it one step further. `group_by()` is especially powerful when used in combination with the `summarize()` function. To combine multiple `dplyr` verbs, we must use the pipe operator: `|>`. This operator serves to connect the functions and have them execute in the order we type them in. Now we can calculate the average price for *each* cut:
+
+```{r}
+avg_price_by_cut <- group_by(diamonds, cut) |>
+                    summarize(avg_price = mean(price))
+
+# View data
+avg_price_by_cut
+```
+
+Take a look at the output data frame. Notice each of the 5 different cut categories and their corresponding average prices.
+
+### Visualization
+
+Next, let's use our new data frame,`avg_price_by_cut`, to compare the average price by cut:
+
+```{r}
+ggplot(avg_price_by_cut, aes(x = cut, y = avg_price)) +
+  geom_point(size = 6, shape = "\u25C6", color = "tomato3") +
+  labs(
+    title = "Average Diamond Price by Cut",
+    x = "Cut",
+    y = "Average Price ($)"
+  )
+```
+
+This visualization demonstrates that in this dataset, Ideal cut diamonds have the lowest average price compared to the others. Despite being marketed as the highest quality, Ideal cut diamonds have the lowest average price in the dataset. Interestingly, Premium cut diamonds have the highest average price. This likely suggests that other factors beyond cut may be influencing the price. It may also be because there is a much wider range of Ideal cut diamonds within this dataset, causing the average price to be brought down. *This is a great example of why looking at multiple variables is important in data analysis.*
+
+### Importance
+
+Grouping is a fundamental step in many data analysis workflows. It helps you to examine how values differ across categories and to create more informative visualizations. `group_by()` enables you to conduct category specific analyses. When paired with `summarize()`, it helps to easily calculate and display summary statistics within each group, allowing a deeper understanding of the data.
+
+# Conclusion
+
+That wraps up our beginner's tutorial into data wrangling with **R**! Throughout the tutorial, we have covered a few of the most useful techniques for transforming data using the `dplyr` package. In working with the `diamonds` dataset, we have learned how to filter, sort, group, and summarize data.
+
+## Recap:
+
+- `filter()`: Allows you to subset data by keeping only the rows that meet specific conditions. Great for narrowing down large datasets to just what you need.
+
+- `arrange()`: Helps you sort data by one or more variables, in ascending or descending order. Useful for ranking, spotting trends, and identifying outliers.
+
+- `group_by()`: Lets you categorize data into groups based on one or more variables. This sets up your dataset for group-wise operations.
+
+- `summarize()`: Used to calculate summary statistics for each group created with `group_by()`. Great for finding averages, totals, or counts within specific categories.
+
+Data wrangling is a crucial part of any analysis. If the data you are working with is not organized well, it can be hard to draw meaningful conclusions. By practicing these techniques, you will be able to turn raw data into something clean, organized, and ready for deeper analysis. Happy wrangling!
